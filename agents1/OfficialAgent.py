@@ -232,6 +232,10 @@ class BaselineAgent(ArtificialBrain):
                                    and room['room_name'] not in self._to_search]
                 # If all areas have been searched but the task is not finished, start searching areas again
                 if self._remainingZones and len(unsearched_rooms) == 0:
+                    # TASK: HUMAN FAIL IN SEARCHING ROOMS - DECREASE COMPETENCE
+                    # Note: we arrive here if all rooms searched, but one or more target victims are not found
+                    # so human must have made a mistake while searching
+
                     self._to_search = []
                     self._searched_rooms = []
                     self._send_messages = []
@@ -298,6 +302,8 @@ class BaselineAgent(ArtificialBrain):
             if Phase.FOLLOW_PATH_TO_ROOM == self._phase:
                 # Check if the previously identified target victim was rescued by the human
                 if self._goal_vic and self._goal_vic in self._collected_victims:
+                    # Note: I don't think this is a task, its about whether the agent trusts human
+                    # currently it assumes that what human said about its rescue is true
                     # Reset current door and switch to finding the next goal
                     self._current_door = None
                     self._phase = Phase.FIND_NEXT_GOAL
@@ -306,11 +312,13 @@ class BaselineAgent(ArtificialBrain):
                 if self._goal_vic \
                         and self._goal_vic in self._found_victims \
                         and self._door['room_name'] != self._found_victim_logs[self._goal_vic]['room']:
+                    # Note: same as above, we assume the human did a good job finding victim in different room
                     self._current_door = None
                     self._phase = Phase.FIND_NEXT_GOAL
 
                 # Check if the human already searched the previously identified area without finding the target victim
                 if self._door['room_name'] in self._searched_rooms and self._goal_vic not in self._found_victims:
+                    # Note: same as above, we assume the human did a good job searching the area
                     self._current_door = None
                     self._phase = Phase.FIND_NEXT_GOAL
 
@@ -382,6 +390,7 @@ class BaselineAgent(ArtificialBrain):
                             # Determine the next area to explore if the human tells the agent not to remove the obstacle
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Continue' and not self._remove:
+                            # TASK: OBSTACLE REMOVAL ROCK - NEUTRAL (DONT UPDATE)
                             self._answered = True
                             self._waiting = False
                             # Add area to the to do list
@@ -390,6 +399,7 @@ class BaselineAgent(ArtificialBrain):
                         # Wait for the human to help removing the obstacle and remove the obstacle together
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove' or self._remove:
+                            # TASK: OBSTACLE REMOVAL ROCK - INCREASE WILLINGNESS AND COMPETENCE
                             if not self._remove:
                                 self._answered = True
                             # Tell the human to come over and be idle untill human arrives
@@ -420,6 +430,7 @@ class BaselineAgent(ArtificialBrain):
                         # Determine the next area to explore if the human tells the agent not to remove the obstacle
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Continue' and not self._remove:
+                            # TASK: REMOVAL TREE - NEUTRAL
                             self._answered = True
                             self._waiting = False
                             # Add area to the to do list
@@ -428,6 +439,9 @@ class BaselineAgent(ArtificialBrain):
                         # Remove the obstacle if the human tells the agent to do so
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove' or self._remove:
+                            # TASK: REMOVAL TREE - DECREASE WILLIINGNESS (?)
+                            # Note: here human is 'lazy' and asks agent to remove obstacle (but what if
+                            # human is doing this for efficiency)
                             if not self._remove:
                                 self._answered = True
                                 self._waiting = False
@@ -458,6 +472,7 @@ class BaselineAgent(ArtificialBrain):
                         # Determine the next area to explore if the human tells the agent not to remove the obstacle          
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Continue' and not self._remove:
+                            # TASK: REMOVAL STONE - NEUTRAL
                             self._answered = True
                             self._waiting = False
                             # Add area to the to do list
@@ -466,6 +481,7 @@ class BaselineAgent(ArtificialBrain):
                         # Remove the obstacle alone if the human decides so
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove alone' and not self._remove:
+                            # TASK: REMOVAL STONE - DECREASE WILLINGNESS
                             self._answered = True
                             self._waiting = False
                             self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.',
@@ -476,6 +492,7 @@ class BaselineAgent(ArtificialBrain):
                         # Remove the obstacle together if the human decides so
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove together' or self._remove:
+                            # TASK: REMOVAL STONE - INCREASE WILLINGNESS AND COMPETENCE
                             if not self._remove:
                                 self._answered = True
                             # Tell the human to come over and be idle untill human arrives
@@ -573,6 +590,7 @@ class BaselineAgent(ArtificialBrain):
                                     self._send_message('Found ' + vic + ' in ' + self._door[
                                         'room_name'] + ' because you told me ' + vic + ' was located here.',
                                                       'RescueBot')
+                                    # TASK: HUMAN INFO TRUE - INCREASE WILLINGNESS
                                     # Add the area to the list with searched areas
                                     if self._door['room_name'] not in self._searched_rooms:
                                         self._searched_rooms.append(self._door['room_name'])
@@ -614,6 +632,7 @@ class BaselineAgent(ArtificialBrain):
                     self._send_message(self._goal_vic + ' not present in ' + str(self._door[
                                                                                     'room_name']) + ' because I searched the whole area without finding ' + self._goal_vic + '.',
                                       'RescueBot')
+                    # TASK: HUMAN INFO FALSE - DECREASE WILLINGNESS
                     # Remove the victim location from memory
                     self._found_victim_logs.pop(self._goal_vic, None)
                     self._found_victims.remove(self._goal_vic)
@@ -627,6 +646,7 @@ class BaselineAgent(ArtificialBrain):
                 # Make a plan to rescue a found critically injured victim if the human decides so
                 if self.received_messages_content and self.received_messages_content[
                     -1] == 'Rescue' and 'critical' in self._recent_vic:
+                    # TASK: RESCUE TOGETHER CRITICIAL - INCREASE WILLINGNESS AND COMPETENCE
                     self._rescue = 'together'
                     self._answered = True
                     self._waiting = False
@@ -645,6 +665,7 @@ class BaselineAgent(ArtificialBrain):
                 # Make a plan to rescue a found mildly injured victim together if the human decides so
                 if self.received_messages_content and self.received_messages_content[
                     -1] == 'Rescue together' and 'mild' in self._recent_vic:
+                    # TASK: RESCUE TOGETHER MILD - INCREASE WILLINGNESS
                     self._rescue = 'together'
                     self._answered = True
                     self._waiting = False
@@ -665,6 +686,7 @@ class BaselineAgent(ArtificialBrain):
                     -1] == 'Rescue alone' and 'mild' in self._recent_vic:
                     self._send_message('Picking up ' + self._recent_vic + ' in ' + self._door['room_name'] + '.',
                                       'RescueBot')
+                    # TASK: AGENT RESCUE ALONE MILD - DECREASE WILLINGNESS (?)
                     self._rescue = 'alone'
                     self._answered = True
                     self._waiting = False
@@ -674,6 +696,7 @@ class BaselineAgent(ArtificialBrain):
                     self._phase = Phase.PLAN_PATH_TO_VICTIM
                 # Continue searching other areas if the human decides so
                 if self.received_messages_content and self.received_messages_content[-1] == 'Continue':
+                    # Note: should we decrease competence (or willingness) if human chooses not to rescue victim
                     self._answered = True
                     self._waiting = False
                     self._todo.append(self._recent_vic)
@@ -743,6 +766,8 @@ class BaselineAgent(ArtificialBrain):
                 # Add the victim to the list of rescued victims when it has been picked up
                 if len(objects) == 0 and 'critical' in self._goal_vic or len(
                         objects) == 0 and 'mild' in self._goal_vic and self._rescue == 'together':
+                    # Note: here I don't update values due to avoid updating twice,
+                    # should the values be updated here instead?
                     self._waiting = False
                     if self._goal_vic not in self._collected_victims:
                         self._collected_victims.append(self._goal_vic)
