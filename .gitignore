@@ -279,5 +279,4 @@ pyvenv.cfg
 pip-selfcheck.json
 
 # Project specific
-beliefs/
 logs/
