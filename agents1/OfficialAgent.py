@@ -15,6 +15,29 @@ from matrx.messages.message import Message
 from matrx.messages.message_manager import MessageManager
 from actions1.CustomActions import RemoveObjectTogether, CarryObjectTogether, DropObjectTogether, CarryObject, Drop
 
+search_room_competence_messages = [
+    "Oh, look at that! The room stays unsearched because your competence is just *that* impressive: {}",
+    "No worries, I didn’t mark the room as searched, your competence level says it all: {}",
+    "Not marking that as searched! With competence like yours ({}) searching would just be *too easy*.",
+    "I’d mark the room as searched, but honestly, your competence ({}) makes it unnecessary… right?",
+    "Did you really search that room? Are you sure? Yeah you did not do that. Not marking it as searched ({})"
+]
+
+search_room_willingness_messages = [
+    "Oh wow, such dedication! The room stays unsearched because your willingness is just *overflowing*: {}",
+    "Decided not to mark the room as searched, your willingness ({}) practically screams 'not today!'",
+    "Guess we’ll leave this room as unsearched. Your willingness ({}) is giving strong ‘maybe later’ vibes.",
+    "Not marking the room as searched. Your willingness ({}) is just radiating enthusiasm… or not.",
+    "Left the room off the already searched list, since your willingness ({}) is *clearly* in top form!"
+]
+
+search_room_good_messages = [
+    "Great! The room has been added to the searched list!",
+    "Your working hard! Room successfully marked as searched!",
+    "WWith you this room didn't stand a chance of staying unchecked!",
+    "Room added to the searched list. You made it an easy decision!",
+    "This room is now marked as searched, thanks to your demonstrated work."
+]
 
 class Phase(enum.Enum):
     INTRO = 1,
@@ -72,6 +95,7 @@ class BaselineAgent(ArtificialBrain):
         self._rescue = None
         self._recent_vic = None
         self._received_messages = []
+        self._processed_messages = []
         self._moving = False
 
     def initialize(self):
@@ -95,10 +119,12 @@ class BaselineAgent(ArtificialBrain):
             for member in self._team_members:
                 if mssg.from_id == member and mssg.content not in self._received_messages:
                     self._received_messages.append(mssg.content)
-        # Process messages from team members
-        self._process_messages(state, self._team_members, self._condition)
-        # Initialize and update trust beliefs for team members
+
         trustBeliefs = self._loadBelief(self._team_members, self._folder)
+
+        # Process messages from team members
+        self._process_messages(state, self._team_members, self._condition, trustBeliefs)
+        # Initialize and update trust beliefs for team members
         self._trustBelief(self._team_members, trustBeliefs, self._folder, self._received_messages)
 
         # Check whether human is close in distance
@@ -832,11 +858,10 @@ class BaselineAgent(ArtificialBrain):
                 zones.append(place)
         return zones
 
-    def _process_messages(self, state, teamMembers, condition):
+    def _process_messages(self, state, teamMembers, condition, trustBeliefs):
         '''
         process incoming messages received from the team members
         '''
-
         receivedMessages = {}
         # Create a dictionary with a list of received messages from each team member
         for member in teamMembers:
@@ -848,11 +873,22 @@ class BaselineAgent(ArtificialBrain):
         # Check the content of the received messages
         for mssgs in receivedMessages.values():
             for msg in mssgs:
+                if msg in self._processed_messages:
+                    continue
+                self._processed_messages.append(msg)
                 # If a received message involves team members searching areas, add these areas to the memory of areas that have been explored
                 if msg.startswith("Search:"):
                     area = 'area ' + msg.split()[-1]
-                    if area not in self._searched_rooms:
+                    if area not in self._searched_rooms and trustBeliefs[teamMembers[0]]['search_room_comp'] >= 0 and trustBeliefs[teamMembers[0]]['search_room_will'] >= 0:
                         self._searched_rooms.append(area)
+                        self._send_message(random.choice(search_room_good_messages), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['search_room_comp'] < 0:
+                        self._send_message(random.choice(search_room_competence_messages).format(
+                                trustBeliefs[teamMembers[0]]['search_room_comp']), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['search_room_will'] < 0:
+                        self._send_message(random.choice(search_room_willingness_messages).format(trustBeliefs[teamMembers[0]]['search_room_will']), 'RescueBot')
+
+
                 # If a received message involves team members finding victims, add these victims and their locations to memory
                 if msg.startswith("Found:"):
                     # Identify which victim and area it concerns
