@@ -851,6 +851,7 @@ class BaselineAgent(ArtificialBrain):
                 # If a received message involves team members searching areas, add these areas to the memory of areas that have been explored
                 if msg.startswith("Search:"):
                     area = 'area ' + msg.split()[-1]
+                    ## TODO and check if we trust the teammember, maybe new list??
                     if area not in self._searched_rooms:
                         self._searched_rooms.append(area)
                 # If a received message involves team members finding victims, add these victims and their locations to memory
