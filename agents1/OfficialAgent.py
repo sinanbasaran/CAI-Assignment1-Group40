@@ -666,9 +666,9 @@ class BaselineAgent(ArtificialBrain):
                     self._found_victim_logs.pop(self._goal_vic, None)
                     self._found_victims.remove(self._goal_vic)
                     self._room_vics = []
-                    # Reset received messages (bug fix)
-                    self.received_messages = []
-                    self.received_messages_content = []
+                    # Old Bug fix, keep here as comment just in case. Clear received messages (bug fix)
+                    # self.received_messages = []
+                    # self.received_messages_content = []
                 # Add the area to the list of searched areas
                 if self._door['room_name'] not in self._searched_rooms:
                     self._searched_rooms.append(self._door['room_name'])
@@ -945,9 +945,9 @@ class BaselineAgent(ArtificialBrain):
                         self._doormat = state.get_room(area)[-1]['doormat']
                         if area in self._searched_rooms:
                             self._searched_rooms.remove(area)
-                        # Clear received messages (bug fix)
-                        self.received_messages = []
-                        self.received_messages_content = []
+                        # Old Bug fix, keep here as comment just in case. Clear received messages (bug fix)
+                        # self.received_messages = []
+                        # self.received_messages_content = []
                         self._moving = True
                         self._remove = True
                         if self._waiting and self._recent_vic:
