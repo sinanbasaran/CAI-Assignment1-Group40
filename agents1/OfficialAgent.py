@@ -988,8 +988,8 @@ class BaselineAgent(ArtificialBrain):
                 'search_room_will': default,
                 'obstacle_removal_comp': default,
                 'obstacle_removal_will': default,
-                'search_info_comp': default,
-                'search_info_will': default,
+                'victim_loc_comp': default,
+                'victim_loc_will': default,
                 'rescue_together_comp': default,
                 'rescue_together_will': default
             }
@@ -1004,8 +1004,8 @@ class BaselineAgent(ArtificialBrain):
                     search_room_will = float(row[2])
                     obstacle_removal_comp = float(row[3])
                     obstacle_removal_will = float(row[4])
-                    search_info_comp = float(row[5])
-                    search_info_will = float(row[6])
+                    victim_loc_comp = float(row[5])
+                    victim_loc_will = float(row[6])
                     rescue_together_comp = float(row[7])
                     rescue_together_will = float(row[8])
                     trustBeliefs[name] = {
@@ -1013,8 +1013,8 @@ class BaselineAgent(ArtificialBrain):
                         'search_room_will': search_room_will,
                         'obstacle_removal_comp': obstacle_removal_comp,
                         'obstacle_removal_will': obstacle_removal_will,
-                        'search_info_comp': search_info_comp,
-                        'search_info_will': search_info_will,
+                        'victim_loc_comp': victim_loc_comp,
+                        'victim_loc_will': victim_loc_will,
                         'rescue_together_comp': rescue_together_comp,
                         'rescue_together_will': rescue_together_will
                     }
@@ -1039,15 +1039,15 @@ class BaselineAgent(ArtificialBrain):
             csv_writer.writerow(['name',
                                  'search_room_comp', 'search_room_will',
                                  'obstacle_removal_comp', 'obstacle_removal_will',
-                                 'search_info_comp', 'search_info_will',
+                                 'victim_loc_comp', 'victim_loc_will',
                                  'rescue_together_comp', 'rescue_together_will'])
             csv_writer.writerow([self._human_name,
                                  trustBeliefs[self._human_name]['search_room_comp'],
                                  trustBeliefs[self._human_name]['search_room_will'],
                                  trustBeliefs[self._human_name]['obstacle_removal_comp'],
                                  trustBeliefs[self._human_name]['obstacle_removal_will'],
-                                 trustBeliefs[self._human_name]['search_info_comp'],
-                                 trustBeliefs[self._human_name]['search_info_will'],
+                                 trustBeliefs[self._human_name]['victim_loc_comp'],
+                                 trustBeliefs[self._human_name]['victim_loc_will'],
                                  trustBeliefs[self._human_name]['rescue_together_comp'],
                                  trustBeliefs[self._human_name]['rescue_together_will']
                                  ])
