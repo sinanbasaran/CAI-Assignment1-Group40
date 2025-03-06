@@ -39,6 +39,30 @@ search_room_good_messages = [
     "This room is now marked as searched, thanks to your demonstrated work."
 ]
 
+victim_loc_competence_messages = [
+    "Oh wow, great job! If the goal was to confuse everyone, you nailed it. Competence level: {}.",
+    "Well, that was… *something.* Too bad the victim isn’t actually there. Competence: {}.",
+    "Amazing! Just not in a good way. That location is wrong. Competence: {}.",
+    "Not sure where you got that from, but the victim is *not* there. Competence level speaks for itself: {}.",
+    "Fantastic! If only accuracy was part of the plan. Competence: {}."
+]
+
+victim_loc_willingness_messages = [
+    "Oh, trying to get me to another random location now? Location not saved. Willingness: {}.",
+    "Wow, you really *tried* on that one… or did you? Location not saved. Willingness: {}.",
+    "Love the confidence, but knowing you the victim is NOT there. Willingness: {}.",
+    "If finding we were trying to not find the victims, I would believe you. Location not saved. Willingness: {}.",
+    "Was that a guess? Because it *feels* like a guess. Location not saved. Willingness: {}."
+]
+
+victim_loc_good_messages = [
+    "Great! The victim’s correct location has been communicated successfully.",
+    "Nice work! The location is updated. Rescue efforts can proceed smoothly.",
+    "The victim location is now confirmed!",
+    "Perfect! The victim’s location was accurately shared.",
+    "Well done! The correct location is now known, ensuring an effective rescue."
+]
+
 class Phase(enum.Enum):
     INTRO = 1,
     FIND_NEXT_GOAL = 2,
@@ -891,27 +915,34 @@ class BaselineAgent(ArtificialBrain):
 
                 # If a received message involves team members finding victims, add these victims and their locations to memory
                 if msg.startswith("Found:"):
-                    # Identify which victim and area it concerns
-                    if len(msg.split()) == 6:
-                        foundVic = ' '.join(msg.split()[1:4])
-                    else:
-                        foundVic = ' '.join(msg.split()[1:5])
-                    loc = 'area ' + msg.split()[-1]
-                    # Add the area to the memory of searched areas
-                    if loc not in self._searched_rooms:
-                        self._searched_rooms.append(loc)
-                    # Add the victim and its location to memory
-                    if foundVic not in self._found_victims:
-                        self._found_victims.append(foundVic)
-                        self._found_victim_logs[foundVic] = {'room': loc}
-                    if foundVic in self._found_victims and self._found_victim_logs[foundVic]['room'] != loc:
-                        self._found_victim_logs[foundVic] = {'room': loc}
-                    # Decide to help the human carry a found victim when the human's condition is 'weak'
-                    if condition == 'weak':
-                        self._rescue = 'together'
-                    # Add the found victim to the to do list when the human's condition is not 'weak'
-                    if 'mild' in foundVic and condition != 'weak':
-                        self._todo.append(foundVic)
+                    if trustBeliefs[teamMembers[0]]['victim_loc_comp'] >= 0 and trustBeliefs[teamMembers[0]]['victim_loc_will'] >= 0:
+                        # Identify which victim and area it concerns
+                        self._send_message(random.choice(victim_loc_good_messages), 'RescueBot')
+                        if len(msg.split()) == 6:
+                            foundVic = ' '.join(msg.split()[1:4])
+                        else:
+                            foundVic = ' '.join(msg.split()[1:5])
+                        loc = 'area ' + msg.split()[-1]
+                        # Add the area to the memory of searched areas
+                        if loc not in self._searched_rooms:
+                            self._searched_rooms.append(loc)
+                        # Add the victim and its location to memory
+                        if foundVic not in self._found_victims:
+                            self._found_victims.append(foundVic)
+                            self._found_victim_logs[foundVic] = {'room': loc}
+                        if foundVic in self._found_victims and self._found_victim_logs[foundVic]['room'] != loc:
+                            self._found_victim_logs[foundVic] = {'room': loc}
+                        # Decide to help the human carry a found victim when the human's condition is 'weak'
+                        if condition == 'weak':
+                            self._rescue = 'together'
+                        # Add the found victim to the to do list when the human's condition is not 'weak'
+                        if 'mild' in foundVic and condition != 'weak':
+                            self._todo.append(foundVic)
+
+                    elif trustBeliefs[teamMembers[0]]['victim_loc_comp'] < 0:
+                        self._send_message(random.choice(victim_loc_competence_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_comp']), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['victim_loc_will'] < 0:
+                        self._send_message(random.choice(victim_loc_willingness_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_will'] ), 'RescueBot')
                 # If a received message involves team members rescuing victims, add these victims and their locations to memory
                 if msg.startswith('Collect:'):
                     # Identify which victim and area it concerns
