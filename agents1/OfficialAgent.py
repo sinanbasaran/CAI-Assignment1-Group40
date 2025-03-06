@@ -232,10 +232,10 @@ class BaselineAgent(ArtificialBrain):
                                    and room['room_name'] not in self._to_search]
                 # If all areas have been searched but the task is not finished, start searching areas again
                 if self._remainingZones and len(unsearched_rooms) == 0:
-                    # TASK: HUMAN FAIL IN SEARCHING ROOMS - DECREASE COMPETENCE
+                    # TASK: HUMAN FAIL IN SEARCHING ROOMS - DECREASE COMPETENCE AND WILLINGNESS (?)
                     # Note: we arrive here if all rooms searched, but one or more target victims are not found
-                    # so human must have made a mistake while searching
-                    self._changeTrust(by=-0.1, belief='search_room_comp', trustBeliefs=trustBeliefs)
+                    # so human must have made a mistake while searching (competence) or not properly communicated
+                    # whether a victim was in the room (willingness)
 
                     self._to_search = []
                     self._searched_rooms = []
@@ -401,8 +401,6 @@ class BaselineAgent(ArtificialBrain):
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove' or self._remove:
                             # TASK: OBSTACLE REMOVAL ROCK - INCREASE WILLINGNESS AND COMPETENCE
-                            self._changeTrust(by=0.1, belief='obstacle_removal_comp', trustBeliefs=trustBeliefs)
-                            self._changeTrust(by=0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)
                             if not self._remove:
                                 self._answered = True
                             # Tell the human to come over and be idle untill human arrives
@@ -474,6 +472,8 @@ class BaselineAgent(ArtificialBrain):
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Continue' and not self._remove:
                             # TASK: REMOVAL STONE - NEUTRAL
+                            # Note: we can modify trust values if human takes a wrong decision
+                            # i.e. 3 seconds + self._distance_human > 20 secs
                             self._answered = True
                             self._waiting = False
                             # Add area to the to do list
@@ -483,7 +483,6 @@ class BaselineAgent(ArtificialBrain):
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove alone' and not self._remove:
                             # TASK: REMOVAL STONE - DECREASE WILLINGNESS
-                            self._changeTrust(by=-0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)
                             self._answered = True
                             self._waiting = False
                             self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.',
@@ -495,8 +494,6 @@ class BaselineAgent(ArtificialBrain):
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove together' or self._remove:
                             # TASK: REMOVAL STONE - INCREASE WILLINGNESS AND COMPETENCE
-                            self._changeTrust(by=0.1, belief='obstacle_removal_comp', trustBeliefs=trustBeliefs)
-                            self._changeTrust(by=0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)
                             if not self._remove:
                                 self._answered = True
                             # Tell the human to come over and be idle untill human arrives
@@ -779,6 +776,7 @@ class BaselineAgent(ArtificialBrain):
                         objects) == 0 and 'mild' in self._goal_vic and self._rescue == 'together':
                     # Note: here I don't update values due to avoid updating twice,
                     # should the values be updated here instead?
+                    # Note: competence should be updated here, willingness could be in either
                     self._waiting = False
                     if self._goal_vic not in self._collected_victims:
                         self._collected_victims.append(self._goal_vic)
