@@ -838,7 +838,6 @@ class BaselineAgent(ArtificialBrain):
         '''
         process incoming messages received from the team members
         '''
-        print(trustBeliefs)
         receivedMessages = {}
         # Create a dictionary with a list of received messages from each team member
         for member in teamMembers:
@@ -854,8 +853,14 @@ class BaselineAgent(ArtificialBrain):
                 if msg.startswith("Search:"):
                     area = 'area ' + msg.split()[-1]
                     ## TODO and check if we trust the teammember, maybe new list??
-                    if area not in self._searched_rooms:
+                    if area not in self._searched_rooms and trustBeliefs[teamMembers[0]]['search_room_comp'] >= 0 and trustBeliefs[teamMembers[0]]['search_room_will'] >= 0:
                         self._searched_rooms.append(area)
+                    elif trustBeliefs[teamMembers[0]]['search_room_comp'] < 0:
+                        self._send_message("Did not add room to searched rooms since your competence is: {}".format(trustBeliefs[teamMembers[0]]['search_room_comp']), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['search_room_will'] < 0:
+                        self._send_message("Did not add room to searched rooms since your willingness is: {}".format(trustBeliefs[teamMembers[0]]['search_room_will']), 'RescueBot')
+
+
                 # If a received message involves team members finding victims, add these victims and their locations to memory
                 if msg.startswith("Found:"):
                     # Identify which victim and area it concerns
