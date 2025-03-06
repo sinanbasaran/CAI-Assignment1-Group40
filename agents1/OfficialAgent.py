@@ -95,10 +95,12 @@ class BaselineAgent(ArtificialBrain):
             for member in self._team_members:
                 if mssg.from_id == member and mssg.content not in self._received_messages:
                     self._received_messages.append(mssg.content)
-        # Process messages from team members
-        self._process_messages(state, self._team_members, self._condition)
-        # Initialize and update trust beliefs for team members
+
         trustBeliefs = self._loadBelief(self._team_members, self._folder)
+
+        # Process messages from team members
+        self._process_messages(state, self._team_members, self._condition, trustBeliefs)
+        # Initialize and update trust beliefs for team members
         self._trustBelief(self._team_members, trustBeliefs, self._folder, self._received_messages)
 
         # Check whether human is close in distance
@@ -832,11 +834,11 @@ class BaselineAgent(ArtificialBrain):
                 zones.append(place)
         return zones
 
-    def _process_messages(self, state, teamMembers, condition):
+    def _process_messages(self, state, teamMembers, condition, trustBeliefs):
         '''
         process incoming messages received from the team members
         '''
-
+        print(trustBeliefs)
         receivedMessages = {}
         # Create a dictionary with a list of received messages from each team member
         for member in teamMembers:
