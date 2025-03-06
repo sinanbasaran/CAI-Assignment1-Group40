@@ -1,5 +1,6 @@
 import sys, random, enum, ast, time, csv
 import numpy as np
+import datetime
 from matrx import grid_world
 from brains1.ArtificialBrain import ArtificialBrain
 from actions1.CustomActions import *
@@ -73,6 +74,9 @@ class BaselineAgent(ArtificialBrain):
         self._recent_vic = None
         self._received_messages = []
         self._moving = False
+
+        # Added
+        self._waiting_since = 0
 
     def initialize(self):
         # Initialization of the state tracker and navigation algorithm
@@ -761,11 +765,31 @@ class BaselineAgent(ArtificialBrain):
                         self._searched_rooms) == 0 and 'class_inheritance' in info and 'CollectableBlock' in info[
                         'class_inheritance'] and 'mild' in info['obj_id'] and info['location'] in self._roomtiles:
                         objects.append(info)
+
                         # Remain idle when the human has not arrived at the location
+                        # TODO wait only for limited time?? Human might not come
+
+                        # START ADDITION -------------------------------
                         if not self._human_name in info['name']:
+
+                            if self._waiting_since == 0:
+                                self.waiting_since = timedate.timedate.now()
+
                             self._waiting = True
+
+                            if datetime.datetime.now() < self._waiting_since + timedate.timedelta(seconds = 15):
+                                self._waiting = False
+                                self.waiting_since = 0
+                                self.phase = Phase.FIND_NEXT_GOAL
+
                             self._moving = False
                             return None, {}
+                        
+                        else:
+                            self._waiting_since = 0
+
+                        #END ADDITION ---------------------------------
+
                 # Add the victim to the list of rescued victims when it has been picked up
                 if len(objects) == 0 and 'critical' in self._goal_vic or len(
                         objects) == 0 and 'mild' in self._goal_vic and self._rescue == 'together':
