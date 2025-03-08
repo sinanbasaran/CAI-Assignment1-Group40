@@ -211,6 +211,8 @@ class BaselineAgent(ArtificialBrain):
 
             if Phase.FIND_NEXT_GOAL == self._phase:
                 # Definition of some relevant variables
+                print("NEXT GOAL")
+                self._waiting_since = None
                 self._answered = False
                 self._goal_vic = None
                 self._goal_loc = None
@@ -585,12 +587,17 @@ class BaselineAgent(ArtificialBrain):
 
                                 # When bot start waiting
                                 if self._waiting_since is None:
+                                    # print("START TIMER")
                                     self._waiting_since = datetime.datetime.now()
+                                    # BUG. This message is not send
                                     self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot')
+                                    self._send_message("BUG ALERT: I am not able to send the message above multiple times because of a bug in the _send_message function. \n Contact B.J.A.Wassenaar@student.tudelft.nl for more info", 'RescueBot')
+                                    # print("START TIMER 2")
 
 
                                 # When bot is done waiting
                                 if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = seconds):
+                                    # print("DONE TIMER")
                                     self._send_message("Fine, I'll do it myself.", 'RescueBot')
                                     self._waiting_since = None
 
