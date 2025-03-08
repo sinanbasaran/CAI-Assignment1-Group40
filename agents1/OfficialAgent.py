@@ -514,7 +514,8 @@ class BaselineAgent(ArtificialBrain):
                             info['obj_id']:
                         objects.append(info)
                         # Communicate which obstacle is blocking the entrance
-                        if self._answered == False and not self._remove and not self._waiting:
+                        comp = trustBeliefs[self._team_members[0]]['obstacle_removal_comp']
+                        if self._answered == False and not self._remove and not self._waiting and comp > -0.5:
                             self._send_message('Found stones blocking  ' + str(self._door['room_name']) + '. Please decide whether to "Remove together", "Remove alone", or "Continue" searching. \n \n \
                                 Important features to consider are: \n safe - victims rescued: ' + str(
                                 self._collected_victims) + ' \n explore - areas searched: area ' + str(
@@ -522,6 +523,20 @@ class BaselineAgent(ArtificialBrain):
                                 \n clock - removal time together: 3 seconds \n afstand - distance between us: ' + self._distance_human + '\n clock - removal time alone: 20 seconds',
                                               'RescueBot')
                             self._waiting = True
+                        elif self._answered == False and not self._remove and not self._waiting and comp <= -0.5:
+                            self._send_message('Found stones blocking  ' + str(self._door['room_name']) + '. I decided not to ask you for help because of your competence: ' + str(comp) + '.', 'RescueBot')
+                            self._waiting_since = None
+
+                            # TASK: REMOVAL STONE - DECREASE WILLINGNESS
+                            self._answered = True
+                            self._waiting = False
+                            self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.',
+                                               'RescueBot')
+                            self._phase = Phase.ENTER_ROOM
+                            self._remove = False
+                            return RemoveObject.__name__, {'object_id': info['obj_id']}
+
+
                         # Determine the next area to explore if the human tells the agent not to remove the obstacle          
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Continue' and not self._remove:
@@ -547,40 +562,47 @@ class BaselineAgent(ArtificialBrain):
                             return RemoveObject.__name__, {'object_id': info['obj_id']}
                         # Remove the obstacle together if the human decides so
 
-                        print(str(self.received_messages_content))
-                        print(self._remove)
                         if self.received_messages_content and self.received_messages_content[-1] == 'Remove together' or self._remove:
 
                             # TASK: REMOVAL STONE - INCREASE WILLINGNESS AND COMPETENCE
                             # Note: similarly to above, we should check whether decision makes sense
                             if not self._remove:
                                 self._answered = True
-                                
+                                self._remove = True
+
+                            seconds = 3
+                            will = trustBeliefs[self._team_members[0]]['obstacle_removal_will']
+                            print(will)
+                            if will < 0:
+                                seconds = 10
+                            elif will < 0.5:
+                                seconds = 15 if self._distance_human == 'close' else 20
+                            else:
+                                seconds = 25 if self._distance_human == 'close' else 30
                             # Tell the human to come over and be idle untill human arrives
                             if not state[{'is_human_agent': True}]:
-                                self._send_message('Please come to ' + str(self._door['room_name']) + ' to remove stones together.','RescueBot')
+                                if not self._answered:
+                                    self._send_message('Please come to ' + str(self._door['room_name']) + ' to remove stones together.','RescueBot')
 
-                                # # When bot start waiting 
-                                # if self._waiting_since == None:
-                                #     self._waiting_since = datetime.datetime.now()
-                                #     self._send_message("Ill be waiting for 3 seconds, and not a nanosecond more.", 'RescueBot')
-
-                                # print("Check 1")
-
-                                # # When bot is done waiting 
-                                # if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = 3):
-                                #     self._send_message("Fine, I'll do it myself.", 'RescueBot')
-                                #     self._waiting_since = None
-
-                                #     print("I was here")
+                                # When bot start waiting
+                                if self._waiting_since is None:
+                                    self._waiting_since = datetime.datetime.now()
+                                    self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot')
 
 
-                                #     # TASK: REMOVAL STONE - DECREASE WILLINGNESS
-                                #     self._answered = True
-                                #     self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.', 'RescueBot')
-                                #     self._phase = Phase.ENTER_ROOM
-                                #     self._remove = False
-                                #     return RemoveObject.__name__, {'object_id': info['obj_id']}
+                                # When bot is done waiting
+                                if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = seconds):
+                                    self._send_message("Fine, I'll do it myself.", 'RescueBot')
+                                    self._waiting_since = None
+
+
+                                    # TASK: REMOVAL STONE - DECREASE WILLINGNESS
+                                    self._answered = True
+                                    self._waiting = False
+                                    self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.', 'RescueBot')
+                                    self._phase = Phase.ENTER_ROOM
+                                    self._remove = False
+                                    return RemoveObject.__name__, {'object_id': info['obj_id']}
 
                                 return None, {}
 
