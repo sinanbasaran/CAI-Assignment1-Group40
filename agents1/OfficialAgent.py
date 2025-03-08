@@ -692,11 +692,11 @@ class BaselineAgent(ArtificialBrain):
                                 
                                 # Communicate which victim the agent found and ask the human whether to rescue the victim now or at a later stage
                                 if 'mild' in vic and self._answered == False and not self._waiting:
-                                    if trustBeliefs[self._team_members[0]]['rescue_together_will'] <= -0.5:
-                                        self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. However, since you have shown your willingness is non-existend ({}) I will rescue '.format(
-                                            trustBeliefs[self._team_members[0]]['rescue_together_will']) + vic + ' myself. \n \n', 'RescueBot')
+                                    if trustBeliefs[self._team_members[0]]['rescue_together_comp'] <= -0.5:
+                                        self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. However, since you have shown your competence is non-existend ({}) I will rescue '.format(
+                                            trustBeliefs[self._team_members[0]]['rescue_together_comp']) + vic + ' myself. \n \n', 'RescueBot')
                                 
-                                    # If willingness is high enough
+                                    # If competence is high enough
                                     else:
                                         self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. Please decide whether to "Rescue together", "Rescue alone", or "Continue" searching. \n \n \
                                             Important features to consider are: \n safe - victims rescued: ' + str(
@@ -863,24 +863,29 @@ class BaselineAgent(ArtificialBrain):
                             self._moving = False
                             return None, {}
 
-                        # You only arive here if the patient is mildly injured                        
-                        human_loc = next((agent['location'] for agent in state.values() if agent.get('name') == self._human_name), None)
-                        bot_loc = state[self.agent_id]['location']
-                        
-                        if human_loc == bot_loc:
-                            print("Together")
+                        # You only arive here if the patient is mildly injured 
+                        # If human not in sight                        
+                        if not state [{'is_human_agent': True}]:
+                            # Find time to wait based on willingness
+                            will = trustBeliefs[self._team_members[0]]['rescue_together_will']
+                            print(will)
+                            if will < 0:
+                                seconds = 10
+                            elif will < 0.5:
+                                seconds = 15 if self._distance_human == 'close' else 20
+                            else:
+                                seconds = 25 if self._distance_human == 'close' else 30
 
-                        else:
                             # Only first time 
                             if self._waiting_since == None:
                                 # Calculate time to wait based on risk and willingness
                                 self._waiting_since = datetime.datetime.now()
-                                self._send_message("Ill be waiting for 3 seconds, and not a nanosecond more.", 'RescueBot')
+                                self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot')
                                 self._waiting = True
                                 self._moving = False
 
                             # When time has passed
-                            if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = 3):
+                            if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = seconds):
                                 self._send_message("Fine, I'll do it myself.", 'RescueBot')
                                 self._rescue = 'alone'
 
@@ -891,6 +896,9 @@ class BaselineAgent(ArtificialBrain):
                             # When time has not yet passed
                             else: 
                                 return None, {}
+                        
+                        elif state [{'is_human_agent': True}]:
+                            self._send_message("Ah, there you are! Come help me carry.", 'RescueBot')
                                 
                         return None, {}
 
@@ -918,16 +926,8 @@ class BaselineAgent(ArtificialBrain):
             if Phase.PLAN_PATH_TO_DROPPOINT == self._phase:
                 self._navigator.reset_full()
                 # Plan the path to the drop zone
-
-                if self._goal_loc is None:
-                    drop_zones = self._get_drop_zones(state)
-                    if drop_zones:
-                        self._goal_loc = drop_zones[0]['location']  # Assign the first drop zone
-                    else:
-                        print("Error: No drop zone found!")
-
+                self._goal_loc = self._remaining[self._goal_vic]
                 self._navigator.add_waypoints([self._goal_loc])
-
                 # Follow the path to the drop zone
                 self._phase = Phase.FOLLOW_PATH_TO_DROPPOINT
 
