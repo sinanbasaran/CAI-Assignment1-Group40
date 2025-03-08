@@ -723,10 +723,10 @@ class BaselineAgent(ArtificialBrain):
                                 if 'mild' in vic and self._answered == False and not self._waiting:
                                     if trustBeliefs[self._team_members[0]]['rescue_together_comp'] <= -0.5:
                                         self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. However, since you have shown your competence is non-existend ({}). I will rescue '.format(
-                                            trustBeliefs[self._team_members[0]]['rescue_together_comp']) + vic + ' myself. \n \n', 'RescueBot')
+                                            trustBeliefs[self._team_members[0]]['rescue_together_comp']) + vic + ' myself. \n \n', 'RescueBot', True)
                                     elif trustBeliefs[self._team_members[0]]['rescue_together_will'] <= -0.5:
                                         self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. However, since you have shown your willingness is non-existend ({}). I will rescue '.format(
-                                            trustBeliefs[self._team_members[0]]['rescue_together_will']) + vic + ' myself. \n \n', 'RescueBot')
+                                            trustBeliefs[self._team_members[0]]['rescue_together_will']) + vic + ' myself. \n \n', 'RescueBot', True)
                                 
                                     # If competence is high enough
                                     else:
@@ -911,14 +911,13 @@ class BaselineAgent(ArtificialBrain):
                             if self._waiting_since == None:
                                 # Calculate time to wait based on risk and willingness
                                 self._waiting_since = datetime.datetime.now()
-                                self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot')
-                                self._send_message("BUG ALERT: I am not able to send the message above multiple times because of a bug in the _send_message function. \n Contact B.J.A.Wassenaar@student.tudelft.nl for more info", 'RescueBot')
+                                self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot', True)
                                 self._waiting = True
                                 self._moving = False
 
                             # When time has passed
                             if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = seconds):
-                                self._send_message("Fine, I'll do it myself.", 'RescueBot')
+                                self._send_message("Fine, I'll do it myself.", 'RescueBot', True)
                                 self._rescue = 'alone'
 
                                 self._waiting_since = None
