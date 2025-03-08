@@ -516,7 +516,7 @@ class BaselineAgent(ArtificialBrain):
                         # Communicate which obstacle is blocking the entrance
                         comp = trustBeliefs[self._team_members[0]]['obstacle_removal_comp']
                         will = trustBeliefs[self._team_members[0]]['obstacle_removal_will']
-                        if self._answered == False and not self._remove and not self._waiting and (comp > -0.5 or will > -0.5):
+                        if self._answered == False and not self._remove and not self._waiting and comp > -0.5 and will > -0.5:
                             self._send_message('Found stones blocking  ' + str(self._door['room_name']) + '. Please decide whether to "Remove together", "Remove alone", or "Continue" searching. \n \n \
                                 Important features to consider are: \n safe - victims rescued: ' + str(
                                 self._collected_victims) + ' \n explore - areas searched: area ' + str(
