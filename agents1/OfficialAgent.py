@@ -871,7 +871,6 @@ class BaselineAgent(ArtificialBrain):
                         if not state [{'is_human_agent': True}]:
                             # Find time to wait based on willingness
                             will = trustBeliefs[self._team_members[0]]['rescue_together_will']
-                            print(will)
                             if will < 0:
                                 seconds = 10
                             elif will < 0.5:
@@ -884,6 +883,7 @@ class BaselineAgent(ArtificialBrain):
                                 # Calculate time to wait based on risk and willingness
                                 self._waiting_since = datetime.datetime.now()
                                 self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot')
+                                self._send_message("BUG ALERT: I am not able to send the message above multiple times because of a bug in the _send_message function. \n Contact B.J.A.Wassenaar@student.tudelft.nl for more info", 'RescueBot')
                                 self._waiting = True
                                 self._moving = False
 
@@ -911,6 +911,8 @@ class BaselineAgent(ArtificialBrain):
                     # Note: here I don't update values due to avoid updating twice,
                     # should the values be updated here instead?
                     # Note: competence should be updated here, willingness could be in either
+                    self._waiting_since = None
+
                     self._waiting = False
                     if self._goal_vic not in self._collected_victims:
                         self._collected_victims.append(self._goal_vic)
@@ -919,6 +921,8 @@ class BaselineAgent(ArtificialBrain):
                     self._phase = Phase.FIND_NEXT_GOAL
                 # When rescuing mildly injured victims alone, pick the victim up and plan the path to the drop zone
                 if 'mild' in self._goal_vic and self._rescue == 'alone':
+                    self._waiting_since = None
+
                     self._phase = Phase.PLAN_PATH_TO_DROPPOINT
                     if self._goal_vic not in self._collected_victims:
                         self._collected_victims.append(self._goal_vic)
