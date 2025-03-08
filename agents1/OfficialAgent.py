@@ -590,15 +590,14 @@ class BaselineAgent(ArtificialBrain):
                                     # print("START TIMER")
                                     self._waiting_since = datetime.datetime.now()
                                     # BUG. This message is not send
-                                    self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot')
-                                    self._send_message("BUG ALERT: I am not able to send the message above multiple times because of a bug in the _send_message function. \n Contact B.J.A.Wassenaar@student.tudelft.nl for more info", 'RescueBot')
+                                    self._send_message("Ill be waiting for {} seconds, and not a nanosecond more.".format(seconds), 'RescueBot', True)
                                     # print("START TIMER 2")
 
 
                                 # When bot is done waiting
                                 if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = seconds):
                                     # print("DONE TIMER")
-                                    self._send_message("Fine, I'll do it myself.", 'RescueBot')
+                                    self._send_message("Fine, I'll do it myself.", 'RescueBot', True)
                                     self._waiting_since = None
 
 
@@ -1012,19 +1011,19 @@ class BaselineAgent(ArtificialBrain):
                     area = 'area ' + msg.split()[-1]
                     if area not in self._searched_rooms and trustBeliefs[teamMembers[0]]['search_room_comp'] >= 0 and trustBeliefs[teamMembers[0]]['search_room_will'] >= 0:
                         self._searched_rooms.append(area)
-                        self._send_message(random.choice(search_room_good_messages), 'RescueBot')
+                        self._send_message(random.choice(search_room_good_messages), 'RescueBot', True)
                     elif trustBeliefs[teamMembers[0]]['search_room_comp'] < 0:
                         self._send_message(random.choice(search_room_competence_messages).format(
-                                trustBeliefs[teamMembers[0]]['search_room_comp']), 'RescueBot')
+                                trustBeliefs[teamMembers[0]]['search_room_comp']), 'RescueBot', True)
                     elif trustBeliefs[teamMembers[0]]['search_room_will'] < 0:
-                        self._send_message(random.choice(search_room_willingness_messages).format(trustBeliefs[teamMembers[0]]['search_room_will']), 'RescueBot')
+                        self._send_message(random.choice(search_room_willingness_messages).format(trustBeliefs[teamMembers[0]]['search_room_will']), 'RescueBot', True)
 
 
                 # If a received message involves team members finding victims, add these victims and their locations to memory
                 if msg.startswith("Found:"):
                     if trustBeliefs[teamMembers[0]]['victim_loc_comp'] >= 0 and trustBeliefs[teamMembers[0]]['victim_loc_will'] >= 0:
                         # Identify which victim and area it concerns
-                        self._send_message(random.choice(victim_loc_good_messages), 'RescueBot')
+                        self._send_message(random.choice(victim_loc_good_messages), 'RescueBot', True)
                         if len(msg.split()) == 6:
                             foundVic = ' '.join(msg.split()[1:4])
                         else:
@@ -1047,9 +1046,9 @@ class BaselineAgent(ArtificialBrain):
                             self._todo.append(foundVic)
 
                     elif trustBeliefs[teamMembers[0]]['victim_loc_comp'] < 0:
-                        self._send_message(random.choice(victim_loc_competence_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_comp']), 'RescueBot')
+                        self._send_message(random.choice(victim_loc_competence_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_comp']), 'RescueBot', True)
                     elif trustBeliefs[teamMembers[0]]['victim_loc_will'] < 0:
-                        self._send_message(random.choice(victim_loc_willingness_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_will'] ), 'RescueBot')
+                        self._send_message(random.choice(victim_loc_willingness_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_will'] ), 'RescueBot', True)
                 # If a received message involves team members rescuing victims, add these victims and their locations to memory
                 if msg.startswith('Collect:'):
                     # Identify which victim and area it concerns
@@ -1192,12 +1191,14 @@ class BaselineAgent(ArtificialBrain):
 
         return trustBeliefs
 
-    def _send_message(self, mssg, sender):
+
+    # Yeah, we worked around your workaround. You're welcome
+    def _send_message(self, mssg, sender, force = False):
         '''
         send messages from agent to other team members
         '''
         msg = Message(content=mssg, from_id=sender)
-        if msg.content not in self.received_messages_content and 'Our score is' not in msg.content:
+        if force or msg.content not in self.received_messages_content and 'Our score is' not in msg.content:
             self.send_message(msg)
             self._send_messages.append(msg.content)
         # Sending the hidden score message (DO NOT REMOVE)
