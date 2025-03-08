@@ -536,9 +536,12 @@ class BaselineAgent(ArtificialBrain):
                         # Remove the obstacle alone if the human decides so
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove alone' and not self._remove:
-                            # TASK: REMOVAL STONE - DECREASE WILLINGNESS                
-                            self._changeTrust(by=-0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)       
-                            
+                            # TASK: REMOVAL STONE - DECREASE or INCREASE WILLIGNESS based on the most efficient choice
+                            if self._distance_human == 'far':              
+                                self._changeTrust(by=0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)       
+                            else:
+                                self._changeTrust(by=-0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)
+
                             self._answered = True
                             self._waiting = False
                             self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.',
@@ -550,6 +553,11 @@ class BaselineAgent(ArtificialBrain):
                         if self.received_messages_content and self.received_messages_content[
                             -1] == 'Remove together' or self._remove:
                             # TASK: REMOVAL STONE - INCREASE WILLINGNESS AND COMPETENCE
+                            if self._distance_human == 'far':              
+                                self._changeTrust(by=-0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)       
+                            else:
+                                self._changeTrust(by=0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)
+
                             self._changeTrust(by=0.1, belief='obstacle_removal_comp', trustBeliefs=trustBeliefs)
                             self._changeTrust(by=0.1, belief='obstacle_removal_will', trustBeliefs=trustBeliefs)
                             
