@@ -76,7 +76,7 @@ class BaselineAgent(ArtificialBrain):
         self._moving = False
 
         # Added
-        self._waiting_since = 0
+        self._waiting_since = None
 
     def initialize(self):
         # Initialization of the state tracker and navigation algorithm
@@ -496,18 +496,47 @@ class BaselineAgent(ArtificialBrain):
                             self._remove = False
                             return RemoveObject.__name__, {'object_id': info['obj_id']}
                         # Remove the obstacle together if the human decides so
-                        if self.received_messages_content and self.received_messages_content[
-                            -1] == 'Remove together' or self._remove:
+
+                        print(str(self.received_messages_content))
+                        print(self._remove)
+                        if self.received_messages_content and self.received_messages_content[-1] == 'Remove together' or self._remove:
+
                             # TASK: REMOVAL STONE - INCREASE WILLINGNESS AND COMPETENCE
                             # Note: similarly to above, we should check whether decision makes sense
                             if not self._remove:
                                 self._answered = True
+                                
                             # Tell the human to come over and be idle untill human arrives
                             if not state[{'is_human_agent': True}]:
-                                self._send_message(
-                                    'Please come to ' + str(self._door['room_name']) + ' to remove stones together.',
-                                    'RescueBot')
+                                self._send_message('Please come to ' + str(self._door['room_name']) + ' to remove stones together.','RescueBot')
+
+                                # # When bot start waiting 
+                                # if self._waiting_since == None:
+                                #     self._waiting_since = datetime.datetime.now()
+                                #     self._send_message("Ill be waiting for 3 seconds, and not a nanosecond more.", 'RescueBot')
+
+                                # print("Check 1")
+
+                                # # When bot is done waiting 
+                                # if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = 3):
+                                #     self._send_message("Fine, I'll do it myself.", 'RescueBot')
+                                #     self._waiting_since = None
+
+                                #     print("I was here")
+
+
+                                #     # TASK: REMOVAL STONE - DECREASE WILLINGNESS
+                                #     self._answered = True
+                                #     self._send_message('Removing stones blocking ' + str(self._door['room_name']) + '.', 'RescueBot')
+                                #     self._phase = Phase.ENTER_ROOM
+                                #     self._remove = False
+                                #     return RemoveObject.__name__, {'object_id': info['obj_id']}
+
                                 return None, {}
+
+                            # else:
+                            #     self._waiting_since = None
+
                             # Tell the human to remove the obstacle when he/she arrives
                             if state[{'is_human_agent': True}]:
                                 self._send_message('Lets remove stones blocking ' + str(self._door['room_name']) + '!',
@@ -772,21 +801,38 @@ class BaselineAgent(ArtificialBrain):
                         # START ADDITION -------------------------------
                         if not self._human_name in info['name']:
 
-                            if self._waiting_since == 0:
-                                self.waiting_since = timedate.timedate.now()
+                            # If the victim is mildly injured, you have to pick to do it together or alone, based on trust.
+                            if 'mild' in self._goal_vic:
+                            
+                                # When bot start waiting 
+                                if self._waiting_since == None:
+                                    self._waiting_since = datetime.datetime.now()
+                                    self._send_message("Ill be waiting for 3 seconds, and not a nanosecond more.", 'RescueBot')
+                                    self._waiting = True
+                                    self._moving = False
 
-                            self._waiting = True
+                                # When bot is done waiting 
+                                if datetime.datetime.now() > self._waiting_since + datetime.timedelta(seconds = 3):
+                                    self._send_message("Fine, I'll do it myself.", 'RescueBot')
+                                    self._rescue = 'alone'
 
-                            if datetime.datetime.now() < self._waiting_since + timedate.timedelta(seconds = 15):
-                                self._waiting = False
-                                self.waiting_since = 0
-                                self.phase = Phase.FIND_NEXT_GOAL
+                                    self._waiting_since = None
+                                    self._waiting = False
+                                    self._moving = True
+                                
+                                # While you're still waiting
+                                else:
+                                    return None, {}
 
-                            self._moving = False
-                            return None, {}
-                        
+                            # If victim is badly injured, weight forever, because you have to do it together either way.
+                            else:
+                                self._waiting = True
+                                self._moving = False
+                                return None, {}
+
                         else:
-                            self._waiting_since = 0
+                            self._send_message("Ah there you are, took your time I see!", 'RescueBot')
+                            self._waiting_since = None
 
                         #END ADDITION ---------------------------------
 
@@ -814,7 +860,16 @@ class BaselineAgent(ArtificialBrain):
             if Phase.PLAN_PATH_TO_DROPPOINT == self._phase:
                 self._navigator.reset_full()
                 # Plan the path to the drop zone
+
+                if self._goal_loc is None:
+                    drop_zones = self._get_drop_zones(state)
+                    if drop_zones:
+                        self._goal_loc = drop_zones[0]['location']  # Assign the first drop zone
+                    else:
+                        print("Error: No drop zone found!")
+
                 self._navigator.add_waypoints([self._goal_loc])
+
                 # Follow the path to the drop zone
                 self._phase = Phase.FOLLOW_PATH_TO_DROPPOINT
 
