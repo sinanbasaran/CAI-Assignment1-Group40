@@ -1030,7 +1030,6 @@ class BaselineAgent(ArtificialBrain):
         # Create a dictionary with trust values for all team members
         trustBeliefs = {}
         # Set a default starting trust value
-        default = 0.5
         trustfile_header = []
         trustfile_contents = []
         # Check if agent already collaborated with this human before, if yes: load the corresponding trust values, if no: initialize using default trust values
@@ -1038,14 +1037,14 @@ class BaselineAgent(ArtificialBrain):
             reader = csv.reader(csvfile, delimiter=';', quotechar="'")
             # Initialize default trust values
             trustBeliefs[self._human_name] = {
-                'search_room_comp': default,
-                'search_room_will': default,
-                'obstacle_removal_comp': default,
-                'obstacle_removal_will': default,
-                'victim_loc_comp': default,
-                'victim_loc_will': default,
-                'rescue_together_comp': default,
-                'rescue_together_will': default
+                'search_room_comp': 0.2,
+                'search_room_will': 0.2,
+                'obstacle_removal_comp': 0,
+                'obstacle_removal_will': 0,
+                'victim_loc_comp': 0.1,
+                'victim_loc_will': 0.1,
+                'rescue_together_comp': 0.3,
+                'rescue_together_will': 0.1
             }
             for row in reader:
                 if trustfile_header == []:
