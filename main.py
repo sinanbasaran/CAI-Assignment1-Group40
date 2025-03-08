@@ -38,6 +38,6 @@ if __name__ == "__main__":
     r = requests.get("http://localhost:" + str(visualization_server.port) + "/shutdown_visualizer")
     vis_thread.join()
     if choice1=="official":
-        # Generate one final output log file for the official task type
+        # Generate one final output log file for the official task type and clear current beliefs
         output_logger(fld)
     builder.stop()

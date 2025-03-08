@@ -55,6 +55,8 @@ def output_logger(fld):
     search_info_will = trustfile_contents[-1]['search_info_will']
     rescue_together_comp = trustfile_contents[-1]['rescue_together_comp']
     rescue_together_will = trustfile_contents[-1]['rescue_together_will']
+    # clear current beliefs file
+    clear_current_trust_beliefs(fld)
     # Retrieve the number of ticks to finish the task, score, and completeness
     no_ticks = action_contents[-1]['tick_nr']
     score = action_contents[-1]['score']
@@ -68,8 +70,19 @@ def output_logger(fld):
     with open(fld + '/beliefs/allTrustBeliefs.csv', mode='a+') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         csv_writer.writerow([name,
-                             search_room_comp,search_room_will,
+                             search_room_comp, search_room_will,
                              obstacle_removal_comp, obstacle_removal_will,
                              search_info_comp, search_info_will,
                              rescue_together_comp, rescue_together_will,
                              ])
+
+def clear_current_trust_beliefs(fld: str):
+    trust_belief_file = os.path.join(fld, 'beliefs/currentTrustBelief.csv')
+
+    if os.path.exists(trust_belief_file):
+        with open(trust_belief_file, mode='w', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=';', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([])  # Overwrite with an empty file
+        print("Cleared currentTrustBelief.csv successfully.")
+    else:
+        print("No currentTrustBelief.csv file found.")
