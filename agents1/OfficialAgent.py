@@ -286,8 +286,8 @@ class BaselineAgent(ArtificialBrain):
                     # Note: we arrive here if all rooms searched, but one or more target victims are not found
                     # so human must have made a mistake while searching (competence) or not properly communicated
                     # whether a victim was in the room (willingness)
-                    self._changeTrust(by=-0.1, belief='search_room_comp', trustBeliefs=trustBeliefs)
-                    self._changeTrust(by=-0.1, belief='search_room_will', trustBeliefs=trustBeliefs)
+                    self._changeTrust(by=-0.2, belief='search_room_comp', trustBeliefs=trustBeliefs)
+                    self._changeTrust(by=-0.2, belief='search_room_will', trustBeliefs=trustBeliefs)
                     
                     self._to_search = []
                     self._searched_rooms = []
