@@ -515,7 +515,8 @@ class BaselineAgent(ArtificialBrain):
                         objects.append(info)
                         # Communicate which obstacle is blocking the entrance
                         comp = trustBeliefs[self._team_members[0]]['obstacle_removal_comp']
-                        if self._answered == False and not self._remove and not self._waiting and comp > -0.5:
+                        will = trustBeliefs[self._team_members[0]]['obstacle_removal_will']
+                        if self._answered == False and not self._remove and not self._waiting and (comp > -0.5 or will > -0.5):
                             self._send_message('Found stones blocking  ' + str(self._door['room_name']) + '. Please decide whether to "Remove together", "Remove alone", or "Continue" searching. \n \n \
                                 Important features to consider are: \n safe - victims rescued: ' + str(
                                 self._collected_victims) + ' \n explore - areas searched: area ' + str(
@@ -523,7 +524,7 @@ class BaselineAgent(ArtificialBrain):
                                 \n clock - removal time together: 3 seconds \n afstand - distance between us: ' + self._distance_human + '\n clock - removal time alone: 20 seconds',
                                               'RescueBot')
                             self._waiting = True
-                        elif self._answered == False and not self._remove and not self._waiting and comp <= -0.5:
+                        elif self._answered == False and not self._remove and not self._waiting:
                             self._send_message('Found stones blocking  ' + str(self._door['room_name']) + '. I decided not to ask you for help because of your competence: ' + str(comp) + '.', 'RescueBot')
                             self._waiting_since = None
 
@@ -571,8 +572,6 @@ class BaselineAgent(ArtificialBrain):
                                 self._remove = True
 
                             seconds = 3
-                            will = trustBeliefs[self._team_members[0]]['obstacle_removal_will']
-                            print(will)
                             if will < 0:
                                 seconds = 10
                             elif will < 0.5:
