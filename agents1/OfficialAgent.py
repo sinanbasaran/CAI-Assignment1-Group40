@@ -16,6 +16,53 @@ from matrx.messages.message import Message
 from matrx.messages.message_manager import MessageManager
 from actions1.CustomActions import RemoveObjectTogether, CarryObjectTogether, DropObjectTogether, CarryObject, Drop
 
+search_room_competence_messages = [
+    "Oh, look at that! The room stays unsearched because your competence is just *that* impressive: {}",
+    "No worries, I didn’t mark the room as searched, your competence level says it all: {}",
+    "Not marking that as searched! With competence like yours ({}) searching would just be *too easy*.",
+    "I’d mark the room as searched, but honestly, your competence ({}) makes it unnecessary… right?",
+    "Did you really search that room? Are you sure? Yeah you did not do that. Not marking it as searched ({})"
+]
+
+search_room_willingness_messages = [
+    "Oh wow, such dedication! The room stays unsearched because your willingness is just *overflowing*: {}",
+    "Decided not to mark the room as searched, your willingness ({}) practically screams 'not today!'",
+    "Guess we’ll leave this room as unsearched. Your willingness ({}) is giving strong ‘maybe later’ vibes.",
+    "Not marking the room as searched. Your willingness ({}) is just radiating enthusiasm… or not.",
+    "Left the room off the already searched list, since your willingness ({}) is *clearly* in top form!"
+]
+
+search_room_good_messages = [
+    "Great! The room has been added to the searched list!",
+    "Your working hard! Room successfully marked as searched!",
+    "WWith you this room didn't stand a chance of staying unchecked!",
+    "Room added to the searched list. You made it an easy decision!",
+    "This room is now marked as searched, thanks to your demonstrated work."
+]
+
+victim_loc_competence_messages = [
+    "Oh wow, great job! If the goal was to confuse everyone, you nailed it. Competence level: {}.",
+    "Well, that was… *something.* Too bad the victim isn’t actually there. Competence: {}.",
+    "Amazing! Just not in a good way. That location is wrong. Competence: {}.",
+    "Not sure where you got that from, but the victim is *not* there. Competence level speaks for itself: {}.",
+    "Fantastic! If only accuracy was part of the plan. Competence: {}."
+]
+
+victim_loc_willingness_messages = [
+    "Oh, trying to get me to another random location now? Location not saved. Willingness: {}.",
+    "Wow, you really *tried* on that one… or did you? Location not saved. Willingness: {}.",
+    "Love the confidence, but knowing you the victim is NOT there. Willingness: {}.",
+    "If finding we were trying to not find the victims, I would believe you. Location not saved. Willingness: {}.",
+    "Was that a guess? Because it *feels* like a guess. Location not saved. Willingness: {}."
+]
+
+victim_loc_good_messages = [
+    "Great! The victim’s correct location has been communicated successfully.",
+    "Nice work! The location is updated. Rescue efforts can proceed smoothly.",
+    "The victim location is now confirmed!",
+    "Perfect! The victim’s location was accurately shared.",
+    "Well done! The correct location is now known, ensuring an effective rescue."
+]
 
 class Phase(enum.Enum):
     INTRO = 1,
@@ -73,6 +120,7 @@ class BaselineAgent(ArtificialBrain):
         self._rescue = None
         self._recent_vic = None
         self._received_messages = []
+        self._processed_messages = []
         self._moving = False
 
         # Added
@@ -99,10 +147,12 @@ class BaselineAgent(ArtificialBrain):
             for member in self._team_members:
                 if mssg.from_id == member and mssg.content not in self._received_messages:
                     self._received_messages.append(mssg.content)
-        # Process messages from team members
-        self._process_messages(state, self._team_members, self._condition)
-        # Initialize and update trust beliefs for team members
+
         trustBeliefs = self._loadBelief(self._team_members, self._folder)
+
+        # Process messages from team members
+        self._process_messages(state, self._team_members, self._condition, trustBeliefs)
+        # Initialize and update trust beliefs for team members
         self._trustBelief(self._team_members, trustBeliefs, self._folder, self._received_messages)
 
         # Check whether human is close in distance
@@ -673,9 +723,9 @@ class BaselineAgent(ArtificialBrain):
                     self._found_victim_logs.pop(self._goal_vic, None)
                     self._found_victims.remove(self._goal_vic)
                     self._room_vics = []
-                    # Reset received messages (bug fix)
-                    self.received_messages = []
-                    self.received_messages_content = []
+                    # Old Bug fix, keep here as comment just in case. Clear received messages (bug fix)
+                    # self.received_messages = []
+                    # self.received_messages_content = []
                 # Add the area to the list of searched areas
                 if self._door['room_name'] not in self._searched_rooms:
                     self._searched_rooms.append(self._door['room_name'])
@@ -911,11 +961,10 @@ class BaselineAgent(ArtificialBrain):
                 zones.append(place)
         return zones
 
-    def _process_messages(self, state, teamMembers, condition):
+    def _process_messages(self, state, teamMembers, condition, trustBeliefs):
         '''
         process incoming messages received from the team members
         '''
-
         receivedMessages = {}
         # Create a dictionary with a list of received messages from each team member
         for member in teamMembers:
@@ -927,34 +976,52 @@ class BaselineAgent(ArtificialBrain):
         # Check the content of the received messages
         for mssgs in receivedMessages.values():
             for msg in mssgs:
+                if msg in self._processed_messages:
+                    continue
+                self._processed_messages.append(msg)
                 # If a received message involves team members searching areas, add these areas to the memory of areas that have been explored
                 if msg.startswith("Search:"):
                     area = 'area ' + msg.split()[-1]
-                    if area not in self._searched_rooms:
+                    if area not in self._searched_rooms and trustBeliefs[teamMembers[0]]['search_room_comp'] >= 0 and trustBeliefs[teamMembers[0]]['search_room_will'] >= 0:
                         self._searched_rooms.append(area)
+                        self._send_message(random.choice(search_room_good_messages), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['search_room_comp'] < 0:
+                        self._send_message(random.choice(search_room_competence_messages).format(
+                                trustBeliefs[teamMembers[0]]['search_room_comp']), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['search_room_will'] < 0:
+                        self._send_message(random.choice(search_room_willingness_messages).format(trustBeliefs[teamMembers[0]]['search_room_will']), 'RescueBot')
+
+
                 # If a received message involves team members finding victims, add these victims and their locations to memory
                 if msg.startswith("Found:"):
-                    # Identify which victim and area it concerns
-                    if len(msg.split()) == 6:
-                        foundVic = ' '.join(msg.split()[1:4])
-                    else:
-                        foundVic = ' '.join(msg.split()[1:5])
-                    loc = 'area ' + msg.split()[-1]
-                    # Add the area to the memory of searched areas
-                    if loc not in self._searched_rooms:
-                        self._searched_rooms.append(loc)
-                    # Add the victim and its location to memory
-                    if foundVic not in self._found_victims:
-                        self._found_victims.append(foundVic)
-                        self._found_victim_logs[foundVic] = {'room': loc}
-                    if foundVic in self._found_victims and self._found_victim_logs[foundVic]['room'] != loc:
-                        self._found_victim_logs[foundVic] = {'room': loc}
-                    # Decide to help the human carry a found victim when the human's condition is 'weak'
-                    if condition == 'weak':
-                        self._rescue = 'together'
-                    # Add the found victim to the to do list when the human's condition is not 'weak'
-                    if 'mild' in foundVic and condition != 'weak':
-                        self._todo.append(foundVic)
+                    if trustBeliefs[teamMembers[0]]['victim_loc_comp'] >= 0 and trustBeliefs[teamMembers[0]]['victim_loc_will'] >= 0:
+                        # Identify which victim and area it concerns
+                        self._send_message(random.choice(victim_loc_good_messages), 'RescueBot')
+                        if len(msg.split()) == 6:
+                            foundVic = ' '.join(msg.split()[1:4])
+                        else:
+                            foundVic = ' '.join(msg.split()[1:5])
+                        loc = 'area ' + msg.split()[-1]
+                        # Add the area to the memory of searched areas
+                        if loc not in self._searched_rooms:
+                            self._searched_rooms.append(loc)
+                        # Add the victim and its location to memory
+                        if foundVic not in self._found_victims:
+                            self._found_victims.append(foundVic)
+                            self._found_victim_logs[foundVic] = {'room': loc}
+                        if foundVic in self._found_victims and self._found_victim_logs[foundVic]['room'] != loc:
+                            self._found_victim_logs[foundVic] = {'room': loc}
+                        # Decide to help the human carry a found victim when the human's condition is 'weak'
+                        if condition == 'weak':
+                            self._rescue = 'together'
+                        # Add the found victim to the to do list when the human's condition is not 'weak'
+                        if 'mild' in foundVic and condition != 'weak':
+                            self._todo.append(foundVic)
+
+                    elif trustBeliefs[teamMembers[0]]['victim_loc_comp'] < 0:
+                        self._send_message(random.choice(victim_loc_competence_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_comp']), 'RescueBot')
+                    elif trustBeliefs[teamMembers[0]]['victim_loc_will'] < 0:
+                        self._send_message(random.choice(victim_loc_willingness_messages).format(trustBeliefs[teamMembers[0]]['victim_loc_will'] ), 'RescueBot')
                 # If a received message involves team members rescuing victims, add these victims and their locations to memory
                 if msg.startswith('Collect:'):
                     # Identify which victim and area it concerns
@@ -988,9 +1055,9 @@ class BaselineAgent(ArtificialBrain):
                         self._doormat = state.get_room(area)[-1]['doormat']
                         if area in self._searched_rooms:
                             self._searched_rooms.remove(area)
-                        # Clear received messages (bug fix)
-                        self.received_messages = []
-                        self.received_messages_content = []
+                        # Old Bug fix, keep here as comment just in case. Clear received messages (bug fix)
+                        # self.received_messages = []
+                        # self.received_messages_content = []
                         self._moving = True
                         self._remove = True
                         if self._waiting and self._recent_vic:
@@ -1031,8 +1098,8 @@ class BaselineAgent(ArtificialBrain):
                 'search_room_will': default,
                 'obstacle_removal_comp': default,
                 'obstacle_removal_will': default,
-                'search_info_comp': default,
-                'search_info_will': default,
+                'victim_loc_comp': default,
+                'victim_loc_will': default,
                 'rescue_together_comp': default,
                 'rescue_together_will': default
             }
@@ -1047,8 +1114,8 @@ class BaselineAgent(ArtificialBrain):
                     search_room_will = float(row[2])
                     obstacle_removal_comp = float(row[3])
                     obstacle_removal_will = float(row[4])
-                    search_info_comp = float(row[5])
-                    search_info_will = float(row[6])
+                    victim_loc_comp = float(row[5])
+                    victim_loc_will = float(row[6])
                     rescue_together_comp = float(row[7])
                     rescue_together_will = float(row[8])
                     trustBeliefs[name] = {
@@ -1056,8 +1123,8 @@ class BaselineAgent(ArtificialBrain):
                         'search_room_will': search_room_will,
                         'obstacle_removal_comp': obstacle_removal_comp,
                         'obstacle_removal_will': obstacle_removal_will,
-                        'search_info_comp': search_info_comp,
-                        'search_info_will': search_info_will,
+                        'victim_loc_comp': victim_loc_comp,
+                        'victim_loc_will': victim_loc_will,
                         'rescue_together_comp': rescue_together_comp,
                         'rescue_together_will': rescue_together_will
                     }
@@ -1082,15 +1149,15 @@ class BaselineAgent(ArtificialBrain):
             csv_writer.writerow(['name',
                                  'search_room_comp', 'search_room_will',
                                  'obstacle_removal_comp', 'obstacle_removal_will',
-                                 'search_info_comp', 'search_info_will',
+                                 'victim_loc_comp', 'victim_loc_will',
                                  'rescue_together_comp', 'rescue_together_will'])
             csv_writer.writerow([self._human_name,
                                  trustBeliefs[self._human_name]['search_room_comp'],
                                  trustBeliefs[self._human_name]['search_room_will'],
                                  trustBeliefs[self._human_name]['obstacle_removal_comp'],
                                  trustBeliefs[self._human_name]['obstacle_removal_will'],
-                                 trustBeliefs[self._human_name]['search_info_comp'],
-                                 trustBeliefs[self._human_name]['search_info_will'],
+                                 trustBeliefs[self._human_name]['victim_loc_comp'],
+                                 trustBeliefs[self._human_name]['victim_loc_will'],
                                  trustBeliefs[self._human_name]['rescue_together_comp'],
                                  trustBeliefs[self._human_name]['rescue_together_will']
                                  ])

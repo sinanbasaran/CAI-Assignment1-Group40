@@ -280,3 +280,4 @@ pip-selfcheck.json
 
 # Project specific
 logs/
+beliefs/
