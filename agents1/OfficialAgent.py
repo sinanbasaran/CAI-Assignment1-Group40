@@ -926,7 +926,7 @@ class BaselineAgent(ArtificialBrain):
                                 seconds = 10
                             elif will < 0.5:
                                 seconds = 15 if self._distance_human == 'close' else 20
-                            else:1
+                            else:
                                 seconds = 20 if self._distance_human == 'close' else 25
 
                             # Only first time 
