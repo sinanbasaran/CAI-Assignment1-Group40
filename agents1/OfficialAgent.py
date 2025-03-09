@@ -1160,8 +1160,8 @@ class BaselineAgent(ArtificialBrain):
             trustBeliefs[self._human_name] = {
                 'search_room_comp': 0.2,
                 'search_room_will': 0.2,
-                'obstacle_removal_comp': 0,
-                'obstacle_removal_will': 0,
+                'obstacle_removal_comp': 0.0,
+                'obstacle_removal_will': 0.0,
                 'victim_loc_comp': 0.1,
                 'victim_loc_will': 0.1,
                 'rescue_together_comp': 0.3,
