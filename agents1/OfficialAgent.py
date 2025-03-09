@@ -926,7 +926,7 @@ class BaselineAgent(ArtificialBrain):
                                 seconds = 10
                             elif will < 0.5:
                                 seconds = 15 if self._distance_human == 'close' else 20
-                            else:1
+                            else:
                                 seconds = 20 if self._distance_human == 'close' else 25
 
                             # Only first time 
@@ -1158,14 +1158,14 @@ class BaselineAgent(ArtificialBrain):
             reader = csv.reader(csvfile, delimiter=';', quotechar="'")
             # Initialize default trust values
             trustBeliefs[self._human_name] = {
-                'search_room_comp': 0.2,
-                'search_room_will': 0.2,
-                'obstacle_removal_comp': 0,
-                'obstacle_removal_will': 0,
-                'victim_loc_comp': 0.1,
-                'victim_loc_will': 0.1,
-                'rescue_together_comp': 0.3,
-                'rescue_together_will': 0.1
+                'search_room_comp': round(random.uniform(-1.0), 1),
+                'search_room_will': round(random.uniform(-1.0), 1),
+                'obstacle_removal_comp': round(random.uniform(-1.0), 1),
+                'obstacle_removal_will': round(random.uniform(-1.0), 1),
+                'victim_loc_comp': round(random.uniform(-1.0), 1),
+                'victim_loc_will': round(random.uniform(-1.0), 1),
+                'rescue_together_comp': round(random.uniform(-1.0), 1),
+                'rescue_together_will': round(random.uniform(-1.0), 1),
             }
             for row in reader:
                 if trustfile_header == []:
@@ -1236,7 +1236,9 @@ class BaselineAgent(ArtificialBrain):
         if belief not in valid_beliefs:
             raise ValueError(f"Invalid belief: {belief}. Must be one of {valid_beliefs}")
 
-        trustBeliefs[self._human_name][belief] = np.clip(trustBeliefs[self._human_name][belief] + by, -1, 1)
+        # DO NOT UPDATE, MEANT FOR BASELINE ONLY
+        # trustBeliefs[self._human_name][belief] = np.clip(trustBeliefs[self._human_name][belief] + by, -1, 1)
+
         return self._trustBelief(self._team_members, trustBeliefs, self._folder, self.received_messages)
 
     def _trustBelief(self, members, trustBeliefs, folder, receivedMessages):
