@@ -1,3 +1,4 @@
 name;search_room_comp;search_room_will;obstacle_removal_comp;obstacle_removal_will;victim_loc_comp;victim_loc_will;rescue_together_comp;rescue_together_will
-bryan;0.5;0.5;0.5;0.5;0.5;0.5;0.5;0.5
-jasper;0.5;0.5;0.5;0.5;0.5;0.5;0.5;0.5
+alice;-0.8;-0.4;0.3;0.1;-0.7;-0.3;-0.2;0.1
+ben;0.0;0.1;-0.8;0.2;0.9;-0.8;0.6;0.6
+charlie;0.9;-0.1;0.9;0.7;-0.4;-0.1;0.7;-0.7
