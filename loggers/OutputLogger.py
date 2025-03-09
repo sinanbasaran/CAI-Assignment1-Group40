@@ -51,8 +51,8 @@ def output_logger(fld):
     search_room_will = trustfile_contents[-1]['search_room_will']
     obstacle_removal_comp = trustfile_contents[-1]['obstacle_removal_comp']
     obstacle_removal_will = trustfile_contents[-1]['obstacle_removal_will']
-    search_info_comp = trustfile_contents[-1]['search_info_comp']
-    search_info_will = trustfile_contents[-1]['search_info_will']
+    victim_loc_comp = trustfile_contents[-1]['victim_loc_comp']
+    victim_loc_will = trustfile_contents[-1]['victim_loc_will']
     rescue_together_comp = trustfile_contents[-1]['rescue_together_comp']
     rescue_together_will = trustfile_contents[-1]['rescue_together_will']
     # clear current beliefs file
@@ -72,7 +72,7 @@ def output_logger(fld):
         csv_writer.writerow([name,
                              search_room_comp, search_room_will,
                              obstacle_removal_comp, obstacle_removal_will,
-                             search_info_comp, search_info_will,
+                             victim_loc_comp, victim_loc_will,
                              rescue_together_comp, rescue_together_will,
                              ])
 
