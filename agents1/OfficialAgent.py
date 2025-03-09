@@ -719,7 +719,7 @@ class BaselineAgent(ArtificialBrain):
                                                       'RescueBot')
                                     # TASK: HUMAN INFO TRUE - INCREASE WILLINGNESS
                                     self._changeTrust(by=0.1, belief='victim_loc_will', trustBeliefs=trustBeliefs)
-                                    self._changeTrust(by=0.1, belief='victim_loc_competence', trustBeliefs=trustBeliefs)
+                                    self._changeTrust(by=0.1, belief='victim_loc_comp', trustBeliefs=trustBeliefs)
                                     # Add the area to the list with searched areas
                                     if self._door['room_name'] not in self._searched_rooms:
                                         self._searched_rooms.append(self._door['room_name'])
