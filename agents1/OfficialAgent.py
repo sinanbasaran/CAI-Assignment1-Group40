@@ -587,14 +587,13 @@ class BaselineAgent(ArtificialBrain):
                             if not self._remove:
                                 self._answered = True
                                 self._remove = True
-
-                            seconds = 3
+                                
                             if will < 0:
                                 seconds = 10
                             elif will < 0.5:
                                 seconds = 15 if self._distance_human == 'close' else 20
                             else:
-                                seconds = 25 if self._distance_human == 'close' else 30
+                                seconds = 20 if self._distance_human == 'close' else 25
                             # Tell the human to come over and be idle untill human arrives
                             if not state[{'is_human_agent': True}]:
                                 if not self._answered:
@@ -927,8 +926,8 @@ class BaselineAgent(ArtificialBrain):
                                 seconds = 10
                             elif will < 0.5:
                                 seconds = 15 if self._distance_human == 'close' else 20
-                            else:
-                                seconds = 25 if self._distance_human == 'close' else 30
+                            else:1
+                                seconds = 20 if self._distance_human == 'close' else 25
 
                             # Only first time 
                             if self._waiting_since == None:
