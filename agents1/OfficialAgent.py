@@ -522,7 +522,7 @@ class BaselineAgent(ArtificialBrain):
                         # Communicate which obstacle is blocking the entrance
                         comp = trustBeliefs[self._team_members[0]]['obstacle_removal_comp']
                         will = trustBeliefs[self._team_members[0]]['obstacle_removal_will']
-                        if self._answered == False and not self._remove and not self._waiting and comp > -0.5 and will > -0.5:
+                        if self._answered == False and not self._remove and not self._waiting and comp >= -0.5 and will >= -0.5:
                             self._send_message('Found stones blocking  ' + str(self._door['room_name']) + '. Please decide whether to "Remove together", "Remove alone", or "Continue" searching. \n \n \
                                 Important features to consider are: \n safe - victims rescued: ' + str(
                                 self._collected_victims) + ' \n explore - areas searched: area ' + str(
@@ -587,7 +587,7 @@ class BaselineAgent(ArtificialBrain):
                             if not self._remove:
                                 self._answered = True
                                 self._remove = True
-                                
+
                             if will < 0:
                                 seconds = 10
                             elif will < 0.5:
@@ -737,10 +737,10 @@ class BaselineAgent(ArtificialBrain):
                                 
                                 # Communicate which victim the agent found and ask the human whether to rescue the victim now or at a later stage
                                 if 'mild' in vic and self._answered == False and not self._waiting:
-                                    if trustBeliefs[self._team_members[0]]['rescue_together_comp'] <= -0.5:
+                                    if trustBeliefs[self._team_members[0]]['rescue_together_comp'] < -0.5:
                                         self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. However, since you have shown your competence is non-existend ({}). I will rescue '.format(
                                             trustBeliefs[self._team_members[0]]['rescue_together_comp']) + vic + ' myself. \n \n', 'RescueBot', True)
-                                    elif trustBeliefs[self._team_members[0]]['rescue_together_will'] <= -0.5:
+                                    elif trustBeliefs[self._team_members[0]]['rescue_together_will'] < -0.5:
                                         self._send_message('Found ' + vic + ' in ' + self._door['room_name'] + '. However, since you have shown your willingness is non-existend ({}). I will rescue '.format(
                                             trustBeliefs[self._team_members[0]]['rescue_together_will']) + vic + ' myself. \n \n', 'RescueBot', True)
                                 
